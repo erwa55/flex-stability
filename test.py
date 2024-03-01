@@ -8,7 +8,7 @@ pipe = DiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1
 pipe.to("cuda")
 
 # Generate the image
-prompt = "An astronaut riding a green horse"
+prompt = "An racoon playing poker"
 images = pipe(prompt=prompt).images[0]
 
 # Convert the PIL image to bytes
