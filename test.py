@@ -18,7 +18,7 @@ image_bytes = image_byte_array.getvalue()
 
 # Upload to S3
 s3 = boto3.client('s3')
-bucket_name = 'your-bucket-name'  # Replace with your bucket name
+bucket_name = 'flex-saas-demo-demo-temp'  # Replace with your bucket name
 object_name = 'your-object-name.jpg'  # Replace with your desired object name
 
 response = s3.put_object(Bucket=bucket_name, Key=object_name, Body=image_bytes)
