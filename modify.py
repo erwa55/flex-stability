@@ -18,7 +18,7 @@ url = "https://huggingface.co/datasets/patrickvonplaten/images/resolve/main/aa_x
 init_image = load_image(url).convert("RGB")
 
 # Define the prompt
-prompt = "a photo of an astronaut riding a horse on mars"
+prompt = "add rainbow "
 
 # Generate the image
 image = pipe(prompt, image=init_image).images[0]
