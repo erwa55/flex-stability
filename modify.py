@@ -1,15 +1,19 @@
-import DiffusionPipeline
+from diffusers import StableDiffusionInpaintPipeline
 import torch
 import boto3
 from io import BytesIO
 from PIL import Image
 
 # Initialize the pipeline
-pipe = DiffusionPipeline.from_pretrained("runwayml/stable-diffusion-inpainting", torch_dtype=torch.float16, revision="fp16")
-pipe.to("cuda")
+pipe = StableDiffusionInpaintPipeline.from_pretrained(
+    "runwayml/stable-diffusion-inpainting",
+    torch_dtype=torch.float16,
+    revision="fp16",
+    device_map="auto",
+)
 
 # Get the prompt from the user
-prompt = input("Add a rainbow ")
+prompt = input("add a rainbow")
 
 # Download the existing image from S3
 s3 = boto3.client('s3')
