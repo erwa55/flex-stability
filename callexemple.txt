@@ -1,7 +1,14 @@
 curl -X POST \
-  http://your-api-endpoint/generate-image/ \
+  http://localhost:8000/generate-image/ \
   -H 'Content-Type: application/json' \
   -d '{
     "prompt": "A beautiful sunset over the ocean with palm trees in the foreground",
-    "image_s3_path": "your-input-bucket/images/original_image.jpg"
+    "image_s3_path": "flex-saas-demo-demo-temp/your-object-name.jpg"
+}'
+
+
+curl --location 'http://localhost:8000/generate-image/' \
+--header 'Content-Type: application/json' \
+--data '{
+    "prompt": "An raccoon playing poker"
 }'
