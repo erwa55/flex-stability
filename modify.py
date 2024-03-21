@@ -1,38 +1,38 @@
+import DiffusionPipeline
+import torch
 import boto3
 from PIL import Image
-import io
+from io import BytesIO
 
-# Your AWS and model setup as before
+# Initialize the pipeline
+pipe = DiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
+pipe.to("cuda")
+
+# Download the image from S3
 s3 = boto3.client('s3')
-bucket_name = 'flex-saas-demo-demo-temp'
-image_key = 'your-object-name.jpg'
+bucket_name = 'flex-saas-demo-demo-temp'  # Replace with your bucket name
+object_name = 'your-object-name.jpg'  # Replace with the object name of the image to modify
 
-# Download image from S3
-s3_response_object = s3.get_object(Bucket=bucket_name, Key=image_key)
-image_content = s3_response_object['Body'].read()
-image = Image.open(io.BytesIO(image_content))
+# Note: This step downloads the image but doesn't use it in the modification process,
+# as the model generates a new image from the prompt.
+response = s3.get_object(Bucket=bucket_name, Key=object_name)
+image_content = response['Body'].read()
+# If you wanted to display or directly manipulate the downloaded image, you could do so like this:
+# existing_image = Image.open(BytesIO(image_content))
 
-# Assuming you have a function to send the image and prompt to the model
-# This is highly dependent on the API or library you're using
-def modify_image_with_model(image, prompt):
+# Generate a new image based on the prompt (this is not a modification of the existing image)
+prompt = "Add a rainbow "
+images = pipe(prompt=prompt).images[0]
 
-    # Pseudo-code for sending the image and prompt to the model
-    # modified_image = model.modify_image(image=image, prompt=prompt)
-    # return modified_image
+# Convert the PIL image to bytes
+image_byte_array = BytesIO()
+images.save(image_byte_array, format='JPEG')  # You can change 'JPEG' to 'PNG' if you prefer
+image_bytes = image_byte_array.getvalue()
 
-    # Placeholder return
-    return image  # This should be replaced with the actual modified image
+# Optionally, you can overwrite the existing object or specify a new name
+new_object_name = 'modified-your-object-name.jpg'  # Replace with your desired object name for the new image
 
-# Modify the image with a specific prompt
-prompt = "Put a rainbow background"
-modified_image = modify_image_with_model(image, prompt)
+# Upload the new image to S3
+response = s3.put_object(Bucket=bucket_name, Key=new_object_name, Body=image_bytes)
 
-# Save the modified image to a buffer
-buffer = io.BytesIO()
-modified_image.save(buffer, format="JPEG")
-buffer.seek(0)
-
-# Upload the modified image back to S3
-modified_image_key = "modified_image_with_rainbow.jpg"
-s3.upload_fileobj(buffer, bucket_name, modified_image_key)
-
+print(f"New image uploaded to S3 bucket {bucket_name} with key {new_object_name}")
