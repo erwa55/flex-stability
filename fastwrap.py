@@ -20,6 +20,19 @@ pipe.to("cuda")
 s3 = boto3.client('s3')
 bucket_name = 'flex-saas-demo-demo-temp'  # Replace with your bucket name
 
+# Custom exception handler as middleware
+@app.middleware("http")
+async def exception_middleware(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception as e:
+        # Log the exception
+        logger.exception(f"Unhandled error: {e}")
+        # Return a generic response to the client
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "An internal server error occurred."}
+        )
 @app.post("/generate-image/")
 async def generate_image(prompt: ImagePrompt):
     try:
