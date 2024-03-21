@@ -2,10 +2,11 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import torch
-from diffusers import StableDiffusionInpaintPipeline, StableDiffusionInpaintImg2ImgPipeline
+from diffusers import StableDiffusionInpaintPipeline
 import boto3
 from io import BytesIO
 from PIL import Image
+from datetime import datetime
 
 # Define a request model class
 class ImagePrompt(BaseModel):
@@ -16,12 +17,17 @@ class ImagePrompt(BaseModel):
 app = FastAPI()
 
 # Initialize the pipeline (do this outside of your endpoint to avoid re-initialization)
-pipe = StableDiffusionInpaintPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
+pipe = StableDiffusionInpaintPipeline.from_pretrained(
+    "stabilityai/stable-diffusion-xl-base-1.0",
+    torch_dtype=torch.float16,
+    use_safetensors=True,
+    variant="fp16"
+)
 pipe.to("cuda")
 
 # Initialize S3 client (do this outside of your endpoint to avoid re-initialization)
 s3 = boto3.client('s3')
-bucket_name = 'flex-saas-demo-demo-temp' # Replace with your bucket name
+bucket_name = 'flex-saas-demo-demo-temp'  # Replace with your bucket name
 
 # Custom exception handler as middleware
 @app.middleware("http")
@@ -30,7 +36,7 @@ async def exception_middleware(request: Request, call_next):
         return await call_next(request)
     except Exception as e:
         # Log the exception
-        logger.exception(f"Unhandled error: {e}")
+        print(f"Unhandled error: {e}")
         # Return a generic response to the client
         return JSONResponse(
             status_code=500,
@@ -38,7 +44,7 @@ async def exception_middleware(request: Request, call_next):
         )
 
 @app.post("/generate-image/")
-async def generate_image(prompt: ImagePrompt = Body(...)):
+async def generate_image(prompt: ImagePrompt):
     try:
         # Fetch the input image from S3
         image_s3_path = prompt.image_s3_path
@@ -52,15 +58,14 @@ async def generate_image(prompt: ImagePrompt = Body(...)):
 
         # Convert the PIL image to bytes
         image_byte_array = BytesIO()
-        images.save(image_byte_array, format='JPEG')  # You can change 'JPEG' to 'PNG' if you prefer
+        images.save(image_byte_array, format='JPEG')
         image_bytes = image_byte_array.getvalue()
 
-        # Construct a unique object name, for example using a timestamp or a UUID
-        from datetime import datetime
+        # Construct a unique object name with a timestamp
         object_name = f"image-{datetime.utcnow().isoformat()}.jpg"
 
         # Upload to S3
-        response = s3.put_object(Bucket=bucket_name, Key=object_name, Body=image_bytes)
+        s3.put_object(Bucket=bucket_name, Key=object_name, Body=image_bytes)
         return {"message": f"Image successfully uploaded to S3 bucket {bucket_name} with key {object_name}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
