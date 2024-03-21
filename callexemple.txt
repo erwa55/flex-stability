@@ -1,0 +1,7 @@
+curl -X POST \
+  http://your-api-endpoint/generate-image/ \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "prompt": "A beautiful sunset over the ocean with palm trees in the foreground",
+    "image_s3_path": "your-input-bucket/images/original_image.jpg"
+}'
