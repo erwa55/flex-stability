@@ -1,40 +1,37 @@
-from diffusers import StableDiffusionInpaintPipeline
 import torch
 import boto3
 from io import BytesIO
-from PIL import Image
+from diffusers import StableDiffusionXLImg2ImgPipeline
+from diffusers.utils import load_image
 
 # Initialize the pipeline
-pipe = StableDiffusionInpaintPipeline.from_pretrained(
-    "runwayml/stable-diffusion-inpainting",
+pipe = StableDiffusionXLImg2ImgPipeline.from_pretrained(
+    "stabilityai/stable-diffusion-xl-refiner-1.0",
     torch_dtype=torch.float16,
-    revision="fp16",
-    device_map="auto",
+    variant="fp16",
+    use_safetensors=True
 )
+pipe = pipe.to("cuda")
 
-# Get the prompt from the user
-prompt = input("add a rainbow")
+# Load the initial image from the URL
+url = "https://huggingface.co/datasets/patrickvonplaten/images/resolve/main/aa_xl/000000009.png"
+init_image = load_image(url).convert("RGB")
 
-# Download the existing image from S3
+# Define the prompt
+prompt = "a photo of an astronaut riding a horse on mars"
+
+# Generate the image
+image = pipe(prompt, image=init_image).images[0]
+
+# Convert the PIL image to bytes
+image_byte_array = BytesIO()
+image.save(image_byte_array, format='JPEG')
+image_bytes = image_byte_array.getvalue()
+
+# Upload the image to S3
 s3 = boto3.client('s3')
 bucket_name = 'flex-saas-demo-demo-temp'  # Replace with your bucket name
-object_name = 'your-object-name.jpg'  # Replace with your existing image name
-response = s3.get_object(Bucket=bucket_name, Key=object_name)
-image_bytes = response['Body'].read()
+object_name = 'generated_image.jpg'  # Replace with your desired object name
+response = s3.put_object(Bucket=bucket_name, Key=object_name, Body=image_bytes)
 
-# Open the image
-image = Image.open(BytesIO(image_bytes))
-
-# Modify the image based on the prompt
-images = pipe(prompt=prompt, image=image, mask_image=None)
-
-# Convert the modified PIL image to bytes
-image_byte_array = BytesIO()
-images[0].save(image_byte_array, format='JPEG')
-modified_image_bytes = image_byte_array.getvalue()
-
-# Upload the modified image to S3
-object_name = f"modified_{object_name}"  # Append "modified_" to the object name
-response = s3.put_object(Bucket=bucket_name, Key=object_name, Body=modified_image_bytes)
-
-print(f"Modified image with prompt '{prompt}' uploaded to S3 bucket {bucket_name} with key {object_name}")
+print(f"Image uploaded to S3 bucket {bucket_name} with key {object_name}")
