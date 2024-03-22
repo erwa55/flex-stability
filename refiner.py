@@ -16,7 +16,7 @@ pipe = pipe.to("cuda")
 # Download the initial image from S3
 s3 = boto3.client('s3')
 bucket_name = 'flex-saas-demo-demo-temp'  # Replace with your bucket name
-object_name = 'input_image.jpg'  # Replace with your input image name
+object_name = 'source.jpg'  # Replace with your input image name
 response = s3.get_object(Bucket=bucket_name, Key=object_name)
 image_bytes = response['Body'].read()
 
@@ -24,7 +24,7 @@ image_bytes = response['Body'].read()
 init_image = Image.open(BytesIO(image_bytes)).convert("RGB")
 
 # Define the prompt
-prompt = "a racoon playing poker,  with a joker card "
+prompt = "a racoon playing poker "
 
 # Generate the image
 image = pipe(prompt, image=init_image).images[0]
