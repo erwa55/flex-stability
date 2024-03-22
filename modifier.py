@@ -33,13 +33,15 @@ image = download_image_from_s3(bucket_name, image_key)
 prompt = "add a rainbow in the background"
 generated_images = pipe(prompt, image=image, num_inference_steps=10, image_guidance_scale=1).images
 
-# Convert the PIL image to bytes for potential further use or saving locally
+# Convert the PIL image to bytes for S3 upload
 img_byte_arr = BytesIO()
 generated_images[0].save(img_byte_arr, format='JPEG')
 img_byte_arr = img_byte_arr.getvalue()
 
-# Optionally, save the generated image locally
-with open('generated_image.jpg', 'wb') as f:
-    f.write(img_byte_arr)
+# Define a new key for the generated image to be saved in S3
+generated_image_key = 'generated_image.jpg'
 
-print("Image processing complete.")
+# Upload the generated image to S3
+s3.put_object(Bucket=bucket_name, Key=generated_image_key, Body=img_byte_arr)
+
+print(f"Generated image uploaded to s3://{bucket_name}/{generated_image_key}")
