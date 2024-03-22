@@ -1,5 +1,4 @@
 import PIL
-import requests
 import torch
 import boto3
 from io import BytesIO
@@ -11,32 +10,36 @@ pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dt
 pipe.to("cuda")
 pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
 
-# Function to download the image
-def download_image(url):
-    image = PIL.Image.open(requests.get(url, stream=True).raw)
+# Setup boto3 client
+s3 = boto3.client('s3')
+
+# Function to download the image from S3
+def download_image_from_s3(bucket, key):
+    obj = s3.get_object(Bucket=bucket, Key=key)
+    image_data = obj['Body'].read()
+    image = PIL.Image.open(BytesIO(image_data))
     image = PIL.ImageOps.exif_transpose(image)
     image = image.convert("RGB")
     return image
 
-# Download the example image
-url = "https://raw.githubusercontent.com/timothybrooks/instruct-pix2pix/main/imgs/example.jpg"
-image = download_image(url)
+# Specify your S3 bucket and the key of the image you want to download
+bucket_name = 'flex-saas-demo-demo-temp'  # Replace with your S3 bucket name
+image_key = 'input_image.jpg'  # Replace with the key of your image in the S3 bucket
+
+# Download the image from S3
+image = download_image_from_s3(bucket_name, image_key)
 
 # Generate the image with the specified prompt
-prompt = "turn him into cyborg"
+prompt = "add a rainbow in the background"
 generated_images = pipe(prompt, image=image, num_inference_steps=10, image_guidance_scale=1).images
 
-# Convert the PIL image to bytes for upload
+# Convert the PIL image to bytes for potential further use or saving locally
 img_byte_arr = BytesIO()
 generated_images[0].save(img_byte_arr, format='JPEG')
 img_byte_arr = img_byte_arr.getvalue()
 
-# Setup boto3 client
-s3 = boto3.client('s3')
-bucket_name = 'flex-saas-demo-demo-temp'  # Replace with your bucket name
-object_name = 'cyborg_transformation.jpg'  # Desired object name in S3
+# Optionally, save the generated image locally
+with open('generated_image.jpg', 'wb') as f:
+    f.write(img_byte_arr)
 
-# Upload the image to S3
-s3.put_object(Bucket=bucket_name, Key=object_name, Body=img_byte_arr)
-
-print(f"Image successfully uploaded to s3://{bucket_name}/{object_name}")
+print("Image processing complete.")
