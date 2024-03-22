@@ -15,18 +15,18 @@ class ImageRequest(BaseModel):
     prompt: str
     generated_image_key: str
 
+# Initialize the pipeline
+pipe = StableDiffusionXLImg2ImgPipeline.from_pretrained(
+    "stabilityai/stable-diffusion-xl-refiner-1.0",
+    torch_dtype=torch.float16,
+    variant="fp16",
+    use_safetensors=True
+)
+pipe = pipe.to("cuda")
+
 # Create the API endpoint
 @app.post("/generate-image")
 async def generate_image(request: ImageRequest):
-    # Initialize the pipeline
-    pipe = StableDiffusionXLImg2ImgPipeline.from_pretrained(
-        "stabilityai/stable-diffusion-xl-refiner-1.0",
-        torch_dtype=torch.float16,
-        variant="fp16",
-        use_safetensors=True
-    )
-    pipe = pipe.to("cuda")
-
     # Download the initial image from S3
     s3 = boto3.client('s3')
     response = s3.get_object(Bucket=request.bucket_name, Key=request.image_key)
