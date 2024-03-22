@@ -24,7 +24,7 @@ image_bytes = response['Body'].read()
 init_image = Image.open(BytesIO(image_bytes)).convert("RGB")
 
 # Define the prompt
-prompt = "add rainbow"
+prompt = "add big rainbow in the background"
 
 # Generate the image
 image = pipe(prompt, image=init_image).images[0]
