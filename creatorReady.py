@@ -6,9 +6,10 @@ from diffusers import DiffusionPipeline
 import boto3
 from io import BytesIO
 
-# Define a request model
-class ImagePrompt(BaseModel):
+class ImageRequest(BaseModel):
     prompt: str
+    bucket_name: str  # Bucket name where the image will be uploaded
+    image_key: str  # The key for the generated image to be saved as in the S3 bucket
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -19,40 +20,35 @@ pipe.to("cuda")
 
 # Initialize S3 client (do this outside of your endpoint to avoid re-initialization)
 s3 = boto3.client('s3')
-bucket_name = 'flex-saas-demo-demo-temp'  # Replace with your bucket name
 
-# Custom exception handler as middleware
+# Exception handler as middleware
 @app.middleware("http")
 async def exception_middleware(request: Request, call_next):
     try:
         return await call_next(request)
     except Exception as e:
-        # Log the exception
-        logger.exception(f"Unhandled error: {e}")
+        # Log the exception here with your preferred logging setup
+        print(f"Unhandled error: {e}")  # Example placeholder for logging
         # Return a generic response to the client
         return JSONResponse(
             status_code=500,
             content={"detail": "An internal server error occurred."}
         )
+
 @app.post("/generate-image/")
-async def generate_image(prompt: ImagePrompt):
+async def generate_image(request: ImageRequest):
     try:
         # Generate the image with the received prompt
-        images = pipe(prompt=prompt.prompt).images[0]
+        images = pipe(prompt=request.prompt).images[0]
 
         # Convert the PIL image to bytes
         image_byte_array = BytesIO()
         images.save(image_byte_array, format='JPEG')  # You can change 'JPEG' to 'PNG' if you prefer
         image_bytes = image_byte_array.getvalue()
 
-        # Construct a unique object name, for example using a timestamp or a UUID
-        from datetime import datetime
-        object_name = f"image-{datetime.utcnow().isoformat()}.jpg"
+        # Use the provided bucket name and image key
+        response = s3.put_object(Bucket=request.bucket_name, Key=request.image_key, Body=image_bytes)
 
-        # Upload to S3
-        response = s3.put_object(Bucket=bucket_name, Key=object_name, Body=image_bytes)
-
-        return {"message": f"Image successfully uploaded to S3 bucket {bucket_name} with key {object_name}"}
+        return {"message": f"Image successfully uploaded to S3 bucket {request.bucket_name} with key {request.image_key}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-

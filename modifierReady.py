@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import PIL
 import torch
@@ -6,21 +7,41 @@ import boto3
 from io import BytesIO
 from diffusers import StableDiffusionInstructPix2PixPipeline, EulerAncestralDiscreteScheduler
 
-app = FastAPI()
-
-# Setup boto3 client globally
-s3 = boto3.client('s3')
-
 class ImageRequest(BaseModel):
     bucket_name: str
     image_key: str
     prompt: str
     generated_image_key: str
+
+# Initialize FastAPI app
+app = FastAPI()
+
 # Initialize the Stable Diffusion pipeline
 model_id = "timbrooks/instruct-pix2pix"
 pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16, safety_checker=None)
 pipe.to("cuda")
 pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
+
+
+# Setup boto3 client globally
+s3 = boto3.client('s3')
+
+
+
+# Exception handler as middleware
+@app.middleware("http")
+async def exception_middleware(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception as e:
+        # Log the exception here with your preferred logging setup
+        print(f"Unhandled error: {e}")  # Example placeholder for logging
+        # Return a generic response to the client
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "An internal server error occurred."}
+        )
+
 @app.post("/generate-image")
 async def generate_image(request: ImageRequest):
 
