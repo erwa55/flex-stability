@@ -42,8 +42,8 @@ async def exception_middleware(request: Request, call_next):
             content={"detail": "An internal server error occurred."}
         )
 
-@app.post("/generate-image")
-async def generate_image(request: ImageRequest):
+@app.post("/modify-image")
+async def modify_image(request: ImageRequest):
 
     
     # Function to download the image from S3

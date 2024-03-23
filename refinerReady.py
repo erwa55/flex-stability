@@ -46,8 +46,8 @@ async def exception_middleware(request: Request, call_next):
         )
 
 # Create the API endpoint
-@app.post("/generate-image")
-async def generate_image(request: ImageRequest):
+@app.post("/refine-image")
+async def refine_image(request: ImageRequest):
     # Download the initial image from S3
     response = s3.get_object(Bucket=request.bucket_name, Key=request.image_key)
     image_bytes = response['Body'].read()

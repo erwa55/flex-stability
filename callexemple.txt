@@ -12,3 +12,47 @@ curl --location 'http://localhost:8000/generate-image/' \
 --data '{
     "prompt": "An raccoon playing poker"
 }'
+
+curl -X 'POST' \
+  'http://0.0.0.0:8000/generate-image' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "bucket_name": "flex-saas-demo-demo-temp",
+  "image_key": "source.png",
+  "prompt": "Turn it into a still from a western",
+  "generated_image_key": "generated_image3.jpg"
+}'
+
+
+curl -X 'POST' \
+  'http://0.0.0.0:8000/generate-image/' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "prompt": "the woman in the field is dressed for the camera, in the style of daria endresen, kris knight, scottish landscapes, light navy and dark brown, georg jensen, intense close-ups, matte photo --ar 132:161 --s 750 --v 5. 2",
+  "bucket_name": "flex-saas-demo-demo-temp",
+  "image_key": "new5.jpg"
+}'
+
+
+curl -X 'POST' \
+  'http://0.0.0.0:8000/generate-image' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "bucket_name": "flex-saas-demo-demo-temp",
+  "image_key": "new3.jpg",
+  "prompt": "",
+  "generated_image_key": "refine5.jpg"
+}'
+
+curl -X 'POST' \
+  'http://0.0.0.0:8000/generate-image' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "bucket_name": "flex-saas-demo-demo-temp",
+  "image_key": "refine5.jpg",
+  "prompt": "make it pixar style",
+  "generated_image_key": "generated_image8.jpg"
+}'
