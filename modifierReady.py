@@ -16,14 +16,14 @@ class ImageRequest(BaseModel):
     image_key: str
     prompt: str
     generated_image_key: str
-
+# Initialize the Stable Diffusion pipeline
+model_id = "timbrooks/instruct-pix2pix"
+pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16, safety_checker=None)
+pipe.to("cuda")
+pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
 @app.post("/generate-image")
 async def generate_image(request: ImageRequest):
-    # Initialize the Stable Diffusion pipeline
-    model_id = "timbrooks/instruct-pix2pix"
-    pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16, safety_checker=None)
-    pipe.to("cuda")
-    pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
+
     
     # Function to download the image from S3
     async def download_image_from_s3(bucket, key):
