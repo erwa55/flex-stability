@@ -1,0 +1,6 @@
+Dockerize
+implement NGINX for APi acces point
+Load test and refine number of instance
+Optional - NRGOK conf
+Implement  NLP  for prompt helper 
+Implement photo to video
