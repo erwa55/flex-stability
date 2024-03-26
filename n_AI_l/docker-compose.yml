@@ -28,6 +28,7 @@ services:
       NVIDIA_VISIBLE_DEVICES: "all"
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:true"
     deploy:
       resources:
         reservations:
