@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 services:
 
   creatorready:
@@ -7,6 +7,8 @@ services:
       dockerfile: dockerfile.app1
     ports:
       - "8001:8001"
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "all"
 
   refinerready:
     build:
@@ -14,6 +16,8 @@ services:
       dockerfile: dockerfile.app2
     ports:
       - "8002:8002"
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "all"
 
   modifierready:
     build:
@@ -21,3 +25,5 @@ services:
       dockerfile: dockerfile.app3
     ports:
       - "8003:8003"
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "all"
