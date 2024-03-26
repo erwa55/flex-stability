@@ -1,0 +1,32 @@
+version: '3'
+services:
+
+  creatorready:
+    build:
+      context: .
+      dockerfile: dockerfile.app1
+    ports:
+      - "8001:8001"
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+
+  refinerready:
+    build:
+      context: .
+      dockerfile: dockerfile.app2
+    ports:
+      - "8002:8002"
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+
+  modifierready:
+    build:
+      context: .
+      dockerfile: dockerfile.app3
+    ports:
+      - "8003:8003"
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
