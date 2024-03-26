@@ -9,6 +9,12 @@ services:
       - "8001:8001"
     environment:
       NVIDIA_VISIBLE_DEVICES: "all"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: [gpu]
 
   refinerready:
     build:
@@ -18,6 +24,12 @@ services:
       - "8002:8002"
     environment:
       NVIDIA_VISIBLE_DEVICES: "all"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: [gpu]
 
   modifierready:
     build:
@@ -27,3 +39,9 @@ services:
       - "8003:8003"
     environment:
       NVIDIA_VISIBLE_DEVICES: "all"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: [gpu]
